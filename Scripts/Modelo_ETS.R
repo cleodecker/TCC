@@ -112,6 +112,16 @@ for (sexo in unique(tabua$SEXO)) {
   ))
 }
 
+# Substituir Mulheres por Feminino e Homens por Masculino
+ets_metricas <- ets_metricas %>%
+  mutate(sexo = recode(sexo,
+                       "Homens" = "Masculino",
+                       "Mulheres" = "Feminino"))
+ets_previsoes <- ets_previsoes %>%
+  mutate(sexo = recode(sexo,
+                       "Homens" = "Masculino",
+                       "Mulheres" = "Feminino"))
+
 # ---------------------------
 # VISUALIZAÇÃO DOS RESULTADOS ETS
 # ---------------------------
@@ -119,9 +129,6 @@ for (sexo in unique(tabua$SEXO)) {
 print("Modelos ETS e Métricas por Idade/Sexo:")
 print(ets_metricas)
 
-# 2. Métricas agregadas por sexo
-print("\nMétricas Globais ETS por Sexo:")
-print(ets_globais)
 
 # Organizar Previsões por Sexo, Ano e Idade
 ets_previsoes <- ets_previsoes %>%

@@ -156,24 +156,11 @@ metricas_total <- prev_total %>%
     .groups = 'drop'
   )
 
-# Calcular médias das métricas por sexo
-metricas_media_por_sexo <- metricas_total %>%
-  group_by(sexo) %>%
-  summarise(
-    RMSE = mean(RMSE, na.rm = TRUE),
-    MAE = mean(MAE, na.rm = TRUE),
-    sMAPE = mean(sMAPE, na.rm = TRUE),
-    .groups = 'drop'
-  )
-
 # Exibir resultados
 cat("\nMétricas por sexo e idade:\n")
 print(metricas_total)
 
-cat("\nMétricas médias por sexo:\n")
-print(metricas_media_por_sexo)
-
 # Gravar resultados em CSV
 write.csv(prev_total, "C:/Users/cleod/OneDrive/Documentos/Documentos/Estudos/Ciências Atuariais/TCC/LC/LC_prev_total.csv", row.names = FALSE)
 write.csv(metricas_total, "C:/Users/cleod/OneDrive/Documentos/Documentos/Estudos/Ciências Atuariais/TCC/LC/LC_metricas_por_sexo.csv", row.names = FALSE)
-write.csv(metricas_media_por_sexo, "C:/Users/cleod/OneDrive/Documentos/Documentos/Estudos/Ciências Atuariais/TCC/LC/LC_metricas_media.csv", row.names = FALSE)
+
