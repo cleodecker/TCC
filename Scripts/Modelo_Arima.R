@@ -1,4 +1,4 @@
-#### Modelagem ARIMA
+#### Modelagem ARIMA com Teste ADF e Ljung-Box
 # limpar o ambiente
 rm(list = ls())
 
@@ -39,7 +39,6 @@ smape <- function(actual, predicted) {
   mean(200 * abs(actual - predicted) / (abs(actual) + abs(predicted)), na.rm = TRUE)
 }
 
-
 # Dataframes para armazenar resultados
 modelos_metricas <- data.frame()
 previsoes_intervalos <- data.frame()
@@ -61,8 +60,22 @@ for (sexo in unique(tabua$SEXO)) {
     
     # Modelagem em escala logarítmica
     ts_treino <- ts(log(treino$nMx), start = treino_inicio)
+    
+    # Teste ADF para estacionariedade
+    adf_resultado <- adf.test(ts_treino, alternative = "stationary")
+    adf_pvalue <- adf_resultado$p.value
+    estacionaria <- ifelse(adf_pvalue < 0.05, "Estacionária", "Não Estacionária")
+    
+    # Modelagem
     modelo <- auto.arima(ts_treino)
     ordem <- arimaorder(modelo)
+    
+    # Teste de Ljung-Box nos resíduos
+    residuos <- residuals(modelo)
+    ljung_box <- Box.test(residuos, lag = 10, type = "Ljung-Box")
+    ljung_box_pvalue <- ljung_box$p.value
+    ljung_box_estatistica <- ljung_box$statistic
+    residuos_ruido_branco <- ifelse(ljung_box_pvalue > 0.05, "Sim", "Não")
     
     # Previsão
     horizonte <- nrow(teste)
@@ -84,6 +97,11 @@ for (sexo in unique(tabua$SEXO)) {
       ARIMA_p = ordem[1],
       ARIMA_d = ordem[2],
       ARIMA_q = ordem[3],
+      ADF_pvalue = adf_pvalue,
+      estacionariedade = estacionaria,
+      Ljung_Box_estatistica = ljung_box_estatistica,
+      Ljung_Box_pvalue = ljung_box_pvalue,
+      residuos_ruido_branco = residuos_ruido_branco,
       RMSE = sqrt(mean((actual - forecast)^2)),
       MAE = mean(abs(actual - forecast)),
       sMAPE = smape(actual, forecast)
@@ -124,6 +142,20 @@ print(modelos_metricas)
 print("\nMétricas Globais por Sexo:")
 print(metricas_globais)
 
+# 3. Resumo de estacionariedade
+print("\nResumo de Estacionariedade:")
+tabela_estacionariedade <- modelos_metricas %>%
+  group_by(sexo, estacionariedade) %>%
+  summarise(quantidade = n(), .groups = 'drop')
+print(tabela_estacionariedade)
+
+# 4. Resumo do teste de Ljung-Box
+print("\nResumo do Teste de Ljung-Box (Resíduos como Ruído Branco):")
+tabela_ljung_box <- modelos_metricas %>%
+  group_by(sexo, residuos_ruido_branco) %>%
+  summarise(quantidade = n(), .groups = 'drop')
+print(tabela_ljung_box)
+
 # Organizar Previsões por Sexo, Ano e Idade
 previsoes_intervalos <- previsoes_intervalos %>%
   arrange(sexo, ano, idade)
@@ -143,4 +175,3 @@ previsoes_intervalos <- previsoes_intervalos %>%
 # Gravar os resultados em CSV
 write.csv(modelos_metricas, "C:/Users/cleod/OneDrive/Documentos/Documentos/Estudos/Ciências Atuariais/TCC/ARIMA/ARIMA_modelos_metricas_arima.csv", row.names = FALSE)
 write.csv(previsoes_intervalos, "C:/Users/cleod/OneDrive/Documentos/Documentos/Estudos/Ciências Atuariais/TCC/ARIMA/ARIMA_previsoes_intervalos_arima.csv", row.names = FALSE)
-
